@@ -12,40 +12,32 @@ ROOT_DIR=$(dirname $BIN_DIR)
 # Syntax sugar.
 source $BIN_DIR/utils
 
-GEOIP_VERSION="1.6.9"
+GEOIP_VERSION="1.2.0"
 
 VENDORED_GEOIP="vendor/geoip/1.6.9"
 APP_GEOIP="/app/$VENDORED_GEOIP"
 
-# Maxmind GeoIP C library
+# Maxmind Geo2IP C library
+GEOIP_DIST_URL="https://github.com/maxmind/libmaxminddb/releases/download/$GEOIP_VERSION/libmaxminddb-$GEOIP_VERSION.tar.gz"
+GEOIP_DIST_DIR="libmaxminddb-$GEOIP_VERSION"
 
-GEOIP_DIST_URL="https://github.com/maxmind/geoip-api-c/releases/download/v$GEOIP_VERSION/GeoIP-$GEOIP_VERSION.tar.gz"
-GEOIP_DIST_DIR="GeoIP-$GEOIP_VERSION"
+GEOLITECITY_URL="http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz"
+GEOLITECITY_FILE="GeoLite2-City.mmdb"
 
-GEOLITECITY_URL="http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz"
-GEOLITECITY_FILE="GeoLiteCity.dat"
-
-GEOLITECOUNTRY_URL="http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz"
-GEOLITECOUNTRY_FILE="GeoIP.dat"
-
-GEOIP_C_URL="https://raw.githubusercontent.com/maxmind/geoip-api-mod_geoip2/master/mod_geoip.c"
-GEOIP_C_FILE="mod_geoip.c"
+GEOLITECOUNTRY_URL="http://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.mmdb.gz"
+GEOLITECOUNTRY_FILE="GeoLite2-Country.mmdb"
 
 puts-step "Installing Maxmind GeoIP C Library $GEOIP_VERSION"
 if [ ! -d "$CACHE_DIR/.geoip/$GEOIP_VERSION" ]; then
     mkdir -p $CACHE_DIR/.geoip/$GEOIP_VERSION
 fi
 
-curl -s -L -o geoip.tar.gz $GEOIP_DIST_URL
-tar -zxvf geoip.tar.gz > /dev/null
+curl -s -L -o libmaxminddb.tar.gz $GEOIP_DIST_URL
+tar -zxvf libmaxminddb.tar.gz > /dev/null
 cd $GEOIP_DIST_DIR
 ./configure --prefix=$BUILD_DIR/.heroku/vendor > /dev/null
 make install > /dev/null
-
-cd $BUILD_DIR/.heroku/vendor
-
-curl -s -L -o $GEOIP_C_FILE $GEOIP_C_URL
-apxs -i -a -L./lib -I./include -lGeoIP -c $GEOIP_C_FILE
+ldconfig
 
 cd $BUILD_DIR
 
@@ -66,4 +58,3 @@ fi
 GEOCITY_LITE_PATH="/app/${GEOLITECITY_FILE}"
 set-env "GEOCITY_LITE_PATH" $GEOCITY_LITE_PATH
 puts "GeoIP City Database is available at:${GEOCITY_LITE_PATH}"
-
